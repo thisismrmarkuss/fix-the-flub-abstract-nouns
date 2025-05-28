@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fix the Flub: Abstract Nouns</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 1rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 600px;
+      height: 90vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .instruction {
+      background: #e8f0fe;
+      border: 2px solid #3f51b5;
+      padding: 1rem;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    button {
+      background: #3f51b5;
+      color: white;
+      border: none;
+      padding: 0.5em 1em;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .question-box, .feedback-box, .score-box, .timer-box {
+      margin: 0.5rem 0;
+      text-align: center;
+    }
+    .feedback-correct {
+      background: #4CAF50;
+      color: white;
+      font-weight: bold;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    .feedback-incorrect {
+      background: #f44336;
+      color: white;
+      font-weight: bold;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    .options button {
+      display: block;
+      width: 100%;
+      margin: 0.3rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="instruction">
+      **Fix the flub, genius. One word is straight-up wrong — can you replace it with the right abstract noun before time taps out?**
+    </div>
+    <div class="controls">
+      <button onclick="startGame()">Start</button>
+      <button onclick="pauseGame()">Pause</button>
+      <button onclick="resumeGame()">Resume</button>
+      <button onclick="stopGame()">Stop</button>
+    </div>
+    <div class="timer-box">Time: <span id="timer">--</span></div>
+    <div class="score-box">Score: <span id="score">0</span> / <span id="total">0</span></div>
+    <div class="question-box" id="questionBox"></div>
+    <div class="options" id="optionsBox"></div>
+    <div class="feedback-box" id="feedbackBox"></div>
+  </div>
+
+  <script>
+    const questions = [
+      ["Their [lamp] couldn't hide their feelings.", "guilt", "envy", "sadness", "compassion", "sadness"],
+      ["Their [vacuum] couldn't hide their feelings.", "loyalty", "honesty", "hope", "guilt", "guilt"],
+      ["Their [blanket] couldn't hide their feelings.", "sincerity", "guilt", "surprise", "wisdom", "guilt"],
+      ["Their [carpet] couldn't hide their feelings.", "disappointment", "boredom", "tolerance", "respect", "disappointment"],
+      ["Their [microwave] couldn't hide their feelings.", "envy", "surprise", "faith", "courage", "courage"],
+      ["Their [spoon] couldn't hide their feelings.", "trust", "freedom", "delight", "tolerance", "trust"],
+      ["Their [carpet] couldn't hide their feelings.", "frustration", "inspiration", "humility", "respect", "frustration"],
+      ["Their [lamp] couldn't hide their feelings.", "loneliness", "frustration", "hate", "freedom", "loneliness"],
+      ["Their [fork] couldn't hide their feelings.", "guilt", "kindness", "faith", "pleasure", "kindness"],
+      ["Their [sandwich] couldn't hide their feelings.", "intelligence", "envy", "pride", "guilt", "envy"],
+      ["Their [table] couldn't hide their feelings.", "melancholy", "humility", "trust", "fear", "fear"],
+      ["Their [towel] couldn't hide their feelings.", "hope", "loneliness", "courage", "pleasure", "loneliness"],
+      ["Their [vacuum] couldn't hide their feelings.", "shame", "freedom", "melancholy", "boredom", "freedom"],
+      ["Their [apple] couldn't hide their feelings.", "envy", "innocence", "disappointment", "trust", "envy"],
+      ["Their [table] couldn't hide their feelings.", "creativity", "shame", "determination", "curiosity", "curiosity"],
+      ["Their [spoon] couldn't hide their feelings.", "joy", "delight", "love", "sadness", "sadness"],
+      ["Their [lamp] couldn't hide their feelings.", "sincerity", "confusion", "kindness", "freedom", "sincerity"],
+      ["Their [blanket] couldn't hide their feelings.", "hate", "melancholy", "pleasure", "ambition", "ambition"],
+      ["Their [apple] couldn't hide their feelings.", "love", "fear", "inspiration", "resentment", "resentment"],
+      ["Their [bottle] couldn't hide their feelings.", "creativity", "confusion", "wisdom", "anxiety", "creativity"],
+      ["Their [sandwich] couldn't hide their feelings.", "boredom", "determination", "surprise", "intelligence", "boredom"],
+      ["Their [notebook] couldn't hide their feelings.", "freedom", "envy", "innocence", "guilt", "innocence"],
+      ["Their [bottle] couldn't hide their feelings.", "tolerance", "faith", "confidence", "melancholy", "faith"],
+      ["Their [notebook] couldn't hide their feelings.", "envy", "respect", "surprise", "sympathy", "sympathy"],
+      ["Their [vacuum] couldn't hide their feelings.", "kindness", "confidence", "justice", "inspiration", "confidence"],
+      ["Their [banana] couldn't hide their feelings.", "kindness", "bravery", "hope", "humility", "kindness"],
+      ["Their [spoon] couldn't hide their feelings.", "humility", "envy", "patience", "determination", "patience"],
+      ["Their [table] couldn't hide their feelings.", "joy", "creativity", "guilt", "trust", "trust"],
+      ["Their [shoes] couldn't hide their feelings.", "confusion", "surprise", "patience", "boredom", "patience"],
+      ["Their [cup] couldn't hide their feelings.", "delight", "patience", "wisdom", "humility", "patience"],
+      ["Their [pencil] couldn't hide their feelings.", "pleasure", "frustration", "respect", "determination", "pleasure"],
+      ["Their [sandwich] couldn't hide their feelings.", "ambition", "hope", "courage", "kindness", "courage"],
+      ["Their [pencil] couldn't hide their feelings.", "hate", "hope", "grief", "sincerity", "hate"],
+      ["Their [table] couldn't hide their feelings.", "loneliness", "boredom", "justice", "truth", "truth"],
+      ["Their [furniture] couldn't hide their feelings.", "loneliness", "pride", "curiosity", "love", "loneliness"],
+      ["Their [carpet] couldn't hide their feelings.", "delight", "compassion", "love", "confidence", "delight"],
+      ["Their [towel] couldn't hide their feelings.", "loneliness", "melancholy", "trust", "surprise", "trust"],
+      ["Their [cup] couldn't hide their feelings.", "ambition", "inspiration", "freedom", "confidence", "ambition"],
+      ["Their [vacuum] couldn't hide their feelings.", "grief", "hope", "curiosity", "guilt", "curiosity"],
+      ["Their [window] couldn't hide their feelings.", "guilt", "hope", "honesty", "truth", "truth"],
+      ["Their [furniture] couldn't hide their feelings.", "disappointment", "faith", "hope", "sympathy", "hope"],
+      ["Their [blanket] couldn't hide their feelings.", "humility", "patience", "love", "determination", "humility"],
+      ["Their [pencil] couldn't hide their feelings.", "anger", "sincerity", "sadness", "truth", "truth"],
+      ["Their [candle] couldn't hide their feelings.", "faith", "pleasure", "patience", "freedom", "freedom"],
+      ["Their [vacuum] couldn't hide their feelings.", "love", "loyalty", "kindness", "melancholy", "loyalty"],
+      ["Their [table] couldn't hide their feelings.", "justice", "wisdom", "patience", "ambition", "patience"],
+      ["Their [vacuum] couldn't hide their feelings.", "confusion", "disappointment", "tolerance", "grief", "grief"],
+      ["Their [table] couldn't hide their feelings.", "inspiration", "respect", "confidence", "guilt", "confidence"],
+      ["Their [vacuum] couldn't hide their feelings.", "shame", "delight", "humility", "bravery", "humility"],
+      ["Their [blanket] couldn't hide their feelings.", "boredom", "frustration", "love", "shame", "boredom"],
+      ["Their [microwave] couldn't hide their feelings.", "grief", "tolerance", "hate", "honesty", "honesty"],
+      ["Their [lamp] couldn't hide their feelings.", "truth", "pride", "justice", "humility", "pride"],
+      ["Their [cup] couldn't hide their feelings.", "loneliness", "curiosity", "sadness", "surprise", "curiosity"],
+      ["Their [furniture] couldn't hide their feelings.", "trust", "patience", "determination", "intelligence", "intelligence"],
+      ["Their [sandwich] couldn't hide their feelings.", "fear", "determination", "pride", "love", "pride"],
+      ["Their [vacuum] couldn't hide their feelings.", "compassion", "hate", "hope", "love", "hope"],
+      ["Their [microwave] couldn't hide their feelings.", "joy", "disappointment", "freedom", "ambition", "joy"],
+      ["Their [banana] couldn't hide their feelings.", "curiosity", "honesty", "love", "shame", "shame"],
+      ["Their [pencil] couldn't hide their feelings.", "confidence", "pleasure", "humility", "justice", "humility"],
+      ["Their [shoes] couldn't hide their feelings.", "respect", "delight", "joy", "determination", "respect"],
+      ["Their [table] couldn't hide their feelings.", "trust", "joy", "bravery", "frustration", "trust"],
+      ["Their [shoes] couldn't hide their feelings.", "shame", "ambition", "confusion", "surprise", "surprise"],
+      ["Their [cup] couldn't hide their feelings.", "confusion", "kindness", "loyalty", "love", "love"],
+      ["Their [carpet] couldn't hide their feelings.", "determination", "joy", "guilt", "sadness", "determination"],
+      ["Their [blanket] couldn't hide their feelings.", "guilt", "respect", "melancholy", "determination", "respect"],
+      ["Their [carpet] couldn't hide their feelings.", "guilt", "confusion", "justice", "surprise", "guilt"],
+      ["Their [window] couldn't hide their feelings.", "courage", "curiosity", "creativity", "humility", "humility"],
+      ["Their [fork] couldn't hide their feelings.", "creativity", "loyalty", "frustration", "faith", "faith"],
+      ["Their [carpet] couldn't hide their feelings.", "anxiety", "faith", "shame", "compassion", "shame"],
+      ["Their [towel] couldn't hide their feelings.", "delight", "sympathy", "kindness", "respect", "kindness"],
+      ["Their [blanket] couldn't hide their feelings.", "wisdom", "love", "determination", "shame", "wisdom"],
+      ["Their [notebook] couldn't hide their feelings.", "melancholy", "tolerance", "disappointment", "pleasure", "pleasure"],
+      ["Their [carpet] couldn't hide their feelings.", "confidence", "frustration", "trust", "curiosity", "curiosity"],
+      ["Their [cup] couldn't hide their feelings.", "truth", "loyalty", "compassion", "melancholy", "loyalty"],
+      ["Their [pencil] couldn't hide their feelings.", "innocence", "kindness", "shame", "confidence", "shame"],
+      ["Their [apple] couldn't hide their feelings.", "intelligence", "hate", "confidence", "inspiration", "hate"],
+      ["Their [sandwich] couldn't hide their feelings.", "fear", "shame", "freedom", "loyalty", "shame"],
+      ["Their [furniture] couldn't hide their feelings.", "sadness", "fear", "loyalty", "determination", "sadness"],
+      ["Their [shoes] couldn't hide their feelings.", "sympathy", "fear", "guilt", "justice", "sympathy"],
+      ["Their [fork] couldn't hide their feelings.", "intelligence", "curiosity", "grief", "faith", "curiosity"],
+      ["Their [candle] couldn't hide their feelings.", "innocence", "trust", "humility", "truth", "humility"],
+      ["Their [notebook] couldn't hide their feelings.", "inspiration", "humility", "shame", "bravery", "humility"],
+      ["Their [microwave] couldn't hide their feelings.", "confusion", "trust", "confidence", "melancholy", "melancholy"],
+      ["Their [candle] couldn't hide their feelings.", "grief", "sadness", "wisdom", "bravery", "sadness"],
+      ["Their [vacuum] couldn't hide their feelings.", "respect", "truth", "pride", "bravery", "respect"],
+      ["Their [bottle] couldn't hide their feelings.", "guilt", "innocence", "disappointment", "sympathy", "guilt"],
+      ["Their [furniture] couldn't hide their feelings.", "anxiety", "tolerance", "curiosity", "fear", "curiosity"],
+      ["Their [furniture] couldn't hide their feelings.", "joy", "determination", "patience", "pleasure", "determination"],
+      ["Their [candle] couldn't hide their feelings.", "sympathy", "anxiety", "surprise", "inspiration", "sympathy"],
+      ["Their [blanket] couldn't hide their feelings.", "bravery", "trust", "faith", "sincerity", "sincerity"],
+      ["Their [candle] couldn't hide their feelings.", "ambition", "melancholy", "loneliness", "disappointment", "disappointment"],
+      ["Their [towel] couldn't hide their feelings.", "anxiety", "surprise", "confidence", "curiosity", "surprise"],
+      ["Their [window] couldn't hide their feelings.", "wisdom", "confidence", "melancholy", "inspiration", "inspiration"],
+      ["Their [banana] couldn't hide their feelings.", "disappointment", "courage", "patience", "truth", "courage"],
+      ["Their [sandwich] couldn't hide their feelings.", "anger", "determination", "sadness", "tolerance", "anger"],
+      ["Their [shoes] couldn't hide their feelings.", "sincerity", "inspiration", "bravery", "curiosity", "sincerity"],
+      ["Their [notebook] couldn't hide their feelings.", "confidence", "joy", "trust", "pride", "pride"],
+      ["Their [sandwich] couldn't hide their feelings.", "innocence", "confusion", "honesty", "grief", "confusion"],
+      ["Their [cup] couldn't hide their feelings.", "joy", "patience", "creativity", "delight", "patience"],
+      ["Their [fork] couldn't hide their feelings.", "creativity", "inspiration", "envy", "bravery", "bravery"]
+    ];
+
+    let current = 0, score = 0, total = questions.length, timer, countdown;
+
+    function displayQuestion() {
+      const q = questions[current];
+      document.getElementById('questionBox').innerText = q[0];
+      document.getElementById('optionsBox').innerHTML = '';
+      [q[1], q[2], q[3], q[4]].forEach(option => {
+        const btn = document.createElement('button');
+        btn.innerText = option;
+        btn.onclick = () => checkAnswer(option, q[5]);
+        document.getElementById('optionsBox').appendChild(btn);
+      });
+      document.getElementById('score').innerText = score;
+      document.getElementById('total').innerText = total;
+    }
+
+    function checkAnswer(selected, correct) {
+      const box = document.getElementById('feedbackBox');
+      if (selected === correct) {
+        box.className = 'feedback-box feedback-correct';
+        box.innerText = getRandomCorrect();
+        score++;
+      } else {
+        box.className = 'feedback-box feedback-incorrect';
+        box.innerText = getRandomIncorrect();
+      }
+      current++;
+      if (current < questions.length) {
+        setTimeout(() => {
+          box.innerText = '';
+          displayQuestion();
+        }, 1500);
+      } else {
+        box.innerText = 'Game over!';
+      }
+    }
+
+    function startGame() {
+      score = 0;
+      current = 0;
+      displayQuestion();
+    }
+    function pauseGame() { clearInterval(countdown); }
+    function resumeGame() { /* logic here */ }
+    function stopGame() { location.reload(); }
+
+    function getRandomCorrect() {
+      const messages = ["Nice one!", "Correctamundo!", "You're on fire!", "Keep slaying!", "That's abstractly perfect!", "Grammar ninja activated!", "Boom. Nailed it.", "Clearly, you're a noun wizard."];
+      return messages[Math.floor(Math.random() * messages.length)];
+    }
+
+    function getRandomIncorrect() {
+      const messages = ["Nope. That’s a sandwich, not an idea.", "Oops — not even close.", "That noun flub was tragic.", "Try reading before clicking maybe?", "Grammar jail for you.", "Ugh. Not your best work."];
+      return messages[Math.floor(Math.random() * messages.length)];
+    }
+  </script>
+</body>
+</html>
